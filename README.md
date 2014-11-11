@@ -88,5 +88,17 @@ Eject the card, put it in your BeagleBone, reboot while pressing on the S2 (boot
 
 TODO:
 - automatically create a single ".img" file for the BeagleBone
-- explain how to boot on the microSD card by default
 - explain how to flash the internal memory with this system
+
+### Boot on microSD card automatically
+
+An option to boot on the microSD card automatically is to remove (or rather rename) the MLO file on the internal boot device. The following commands may be executed when running Calaos OS after booting while long-pressing on S2 :
+
+```
+mount /dev/mmcblk1p1 /mnt
+mv /mnt/MLO /mnt/MLO.bak
+umount /mnt
+halt
+```
+
+Please note this is not a way to change the multiboot order (i.e. pressing on the S2 button will not boot the BeagleBone on the internal memory) but a way to totally invalidate boot on the internal memory.

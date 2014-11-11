@@ -3,6 +3,8 @@ calaos-os
 
 Calaos OS contains the scripts needed to build Calaos images. The buildsystem is using OpenEmbedded and the scripts comes from the great Angstrom build system.
 
+This fork (tiramiseb/calaos-os) is made especially to support the BeagleBone Black board. It will be merged to "calaos/calaos-os" when the new version of Yocto will be used by Calaos OS, for a better support of this platform.
+
 
 Supported boards
 ----------------
@@ -14,7 +16,9 @@ The following hardware are supported by the Calaos team:
 - NUC intel platform
 - Cubieboard
 
-Other hardware may be supported but only those one are heavily tested by us. Feel free to try to port to a new hardware, and come to check with us for all the details.
+This fork makes Calaos OS work on the following hardware:
+- BeagleBone
+- BeagleBone Black
 
 How to build
 ------------
@@ -33,12 +37,7 @@ Launch the build script without arguments to get the list of options and support
 
 Before you need to get all required modules and configure for the wanted machine:
 ```bash
-./build.sh init <machine>
-```
-
-Then you can configure another machine you want to build to:
-```bash
-./build.sh config raspberrypi
+./build.sh init beaglebone
 ```
 
 Finally you can start a build using bitbake:
@@ -52,7 +51,10 @@ You will find the images in tmp-eglibc/deploy/images/
 Beaglebone specific : how to install
 ------------------------------------
 
-The final image is not automatically created, the following steps should make us able to boot on the created stuff :
+The final image is not automatically created, it will probably be created with the new version of Yocto, which will be used later by Calaos OS.
+
+
+The following steps should make you able to boot on Calaos OS :
 
 Create 2 partitions (FAT16 and ext4) on the microSD card :
 ```
@@ -86,10 +88,6 @@ sync
 ```
 Eject the card, put it in your BeagleBone, reboot while pressing on the S2 (boot) button, enjoy.
 
-TODO:
-- automatically create a single ".img" file for the BeagleBone
-- explain how to flash the internal memory with this system
-
 ### Boot on microSD card automatically
 
 An option to boot on the microSD card automatically is to remove (or rather rename) the MLO file on the internal boot device. The following commands may be executed when running Calaos OS after booting while long-pressing on S2 :
@@ -102,3 +100,53 @@ halt
 ```
 
 Please note this is not a way to change the multiboot order (i.e. pressing on the S2 button will not boot the BeagleBone on the internal memory) but a way to totally invalidate boot on the internal memory.
+
+### Flash the internal memory (BeagleBone Black)
+
+The BeagleBone Black is equipped with an internal memory, which is an eMMC chip : it acts as a standard MMC memory module. So, flashing it is very similar to the steps needed to flash a SD/MMC card...
+
+The following steps are executed on a Calaos OS instance running on a SD card.
+
+Create 2 partitions (FAT16 and ext4) on the internal memory (this is the default partitioning scheme):
+```
+Disk /dev/mmcblk1: 3867 MB, 3867148288 bytes
+4 heads, 16 sectors/track, 118016 cylinders
+Units = cylinders of 64 * 512 = 32768 bytes
+
+        Device Boot      Start         End      Blocks  Id System
+/dev/mmcblk1p1   *          33        3104       98304   e Win95 FAT16 (LBA)
+/dev/mmcblk1p2            3105      118016     3677184  83 Linux
+```
+Mount and flush the boot partition:
+```
+mount /dev/mmcblk1p1 /mnt
+rm -fr /mnt/*
+```
+Copy the MLO, u-boot.img and uImage from the current boot partition:
+```
+mkdir /mnt2
+mount /dev/mmcblk0p1 /mnt2
+cp /mnt2/* /mnt
+```
+Unmount both boot partitions:
+```
+umount /mnt
+umount /mnt2
+rmdir /mnt2
+```
+Mount and flush the root partition:
+```
+mount /dev/mmcblk1p2 /mnt
+rm -fr /mnt/*
+```
+Copy the system:
+```
+mkdir /mnt/proc /mnt/sys /mnt/mnt /mnt/media /mnt/run /mnt/tmp
+cp -a /bin /boot /dev /etc /home /lib /sbin /usr /var /www /mnt/
+```
+Unmount the filesystem and shutdown:
+```
+umount /mnt
+halt
+```
+Now, unplug the power, remove the microSD card, power on the board and enjoy!

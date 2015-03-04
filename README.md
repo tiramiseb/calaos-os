@@ -20,6 +20,8 @@ This fork makes Calaos OS work on the following hardware:
 - BeagleBone
 - BeagleBone Black
 
+However, it has only been validated on BeagleBone Black, without the GUI.
+
 How to build
 ------------
 

@@ -55,10 +55,9 @@ Beaglebone specific : how to install
 
 The final image is not automatically created, it will probably be created with the new version of Yocto, which will be used later by Calaos OS.
 
+The following steps should make you able to boot on Calaos OS...
 
-The following steps should make you able to boot on Calaos OS :
-
-Create 2 partitions (FAT16 and ext4) on the microSD card :
+Create 2 partitions (FAT16 and ext4) on a microSD card:
 ```
 Disk /dev/mmcblk0: 2008 MB, 2008023040 bytes
 4 heads, 16 sectors/track, 61280 cylinders
@@ -70,30 +69,83 @@ Partition 1 does not end on cylinder boundary
 /dev/mmcblk0p2            3105       54400     1641472  83 Linux
 Partition 2 does not end on cylinder boundary
 ```
+
 Copy MLO, u-boot.img and uImage to the FAT16 partition (example if this partition is mounted on /media/boot) :
 ```
 cp MLO-beaglebone-2013.04 /media/boot/MLO
 cp u-boot-beaglebone-2013.04-r0.img /media/boot/u-boot.img
 cp uImage--3.8.13-r23a-beaglebone-20141110150906.bin /media/boot/uImage
 ```
+
 Copy the system files to the ext4 partition (example if this partition is mounted on /media/root) :
 ```
 tar zxvf calaos-image-beaglebone-oe-core.0-20141110150906.rootfs.tar.gz -C /media/root
 ```
+
 Copy the kernel modules to the ext4 partition :
 ```
 tar zxvf modules--3.8.13-r23a-beaglebone-20141110150906.tgz -C /media/root
 ```
+
 A good'ol sync...
 ```
 sync
 ```
+
 Eject the card, put it in your BeagleBone, reboot while pressing on the S2 (boot) button, enjoy.
+
+### Update
+
+My procedure to update Calaos OS is the following.
+
+1. on the Calaos server, make an archive of Calaos configuration:
+```
+tar zcvf etc_calaos.tar.gz /etc/calaos
+```
+
+2. on the computer, copy the Calaos configuration archive:
+```
+scp <calaos_server>:etc_calaos.tar.gz .
+```
+
+3. generate the new image, put it on a microSD card (see instructions above).
+
+4. edit etc/hostname on the microSD card, put the Calaos server's name in there.
+
+5. extract the configuration archive on the microSD card:
+```
+sudo tar zxvf etc_calaos.tar.gz -C /media/root
+```
+
+6. unmount the microSD card.
+
+7. reboot the BeagleBone on the microSD card (see instructions above).
+
+8. find the Calaos server's IP address (maybe amongst the DHCP server leases).
+
+9. connect to the Calaos server with SSH.
+
+10. use connmanctl to get the Ethernet device name:
+```
+# connmanctl services
+*AO Wired                ethernet_d05fb8fecfd3_cable
+```
+
+11. use connmanctl to configure a static IP address:
+```
+connmanctl config ethernet_d05fb8fecfd3_cable --ipv4 manual 192.168.42.251 255.255.255.0 192.168.42.254 --nameservers 192.168.42.254
+```
+
+### Enable UART1
+
+I use UART1 to read data from my electricity counter (Téléinformation from ErDF). Create the uEnv.txt file on the boot partition, with the following content:
+```
+optargs=capemgr.enable_partno=BB-UART1
+```
 
 ### Boot on microSD card automatically
 
 An option to boot on the microSD card automatically is to remove (or rather rename) the MLO file on the internal boot device. The following commands may be executed when running Calaos OS after booting while long-pressing on S2 :
-
 ```
 mount /dev/mmcblk1p1 /mnt
 mv /mnt/MLO /mnt/MLO.bak
@@ -119,36 +171,43 @@ Units = cylinders of 64 * 512 = 32768 bytes
 /dev/mmcblk1p1   *          33        3104       98304   e Win95 FAT16 (LBA)
 /dev/mmcblk1p2            3105      118016     3677184  83 Linux
 ```
+
 Mount and flush the boot partition:
 ```
 mount /dev/mmcblk1p1 /mnt
 rm -fr /mnt/*
 ```
+
 Copy the MLO, u-boot.img and uImage from the current boot partition:
 ```
 mkdir /mnt2
 mount /dev/mmcblk0p1 /mnt2
 cp /mnt2/* /mnt
 ```
+
 Unmount both boot partitions:
 ```
 umount /mnt
 umount /mnt2
 rmdir /mnt2
 ```
+
 Mount and flush the root partition:
 ```
 mount /dev/mmcblk1p2 /mnt
 rm -fr /mnt/*
 ```
+
 Copy the system:
 ```
 mkdir /mnt/proc /mnt/sys /mnt/mnt /mnt/media /mnt/run /mnt/tmp
 cp -a /bin /boot /dev /etc /home /lib /sbin /usr /var /www /mnt/
 ```
+
 Unmount the filesystem and shutdown:
 ```
 umount /mnt
 halt
 ```
-Now, unplug the power, remove the microSD card, power on the board and enjoy!
+
+Now, remove the microSD card, power on the board and enjoy!

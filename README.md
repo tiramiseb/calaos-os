@@ -3,7 +3,9 @@ calaos-os
 
 Calaos OS contains the scripts needed to build Calaos images. The buildsystem is using OpenEmbedded and the scripts comes from the great Angstrom build system.
 
-This fork (tiramiseb/calaos-os) is made especially to support the BeagleBone Black board. It will be merged to "calaos/calaos-os" when the new version of Yocto will be used by Calaos OS, for a better support of this platform.
+This fork (tiramiseb/calaos-os) is made especially to support the BeagleBone Black board. I have also added Python, for personal needs.
+
+BeagleBone support may be merged to "calaos/calaos-os" when the new version of Yocto will be used by Calaos OS, for a better support of this platform.
 
 
 Supported boards
